@@ -15,9 +15,8 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # --- Hugging Face repo tempat model disimpan ---
 # ganti sesuai repo kamu di Hugging Face
-repo_id = "iibn13/flask"  
-filename = "resnet_model_gmm_opt_final.keras"  
-
+repo_id = "ibn13/flask"
+filename = "resnet_model_gmm_opt_final.keras"
 # --- Download model dari Hugging Face Hub ---
 model_path = hf_hub_download(repo_id=repo_id, filename=filename)
 model = load_model(model_path)

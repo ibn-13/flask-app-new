@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Evaluasi Model</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 30px;
+            background-color: #f9f9f9;
+        }
+        img {
+            max-width: 500px;
+            margin: 20px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Confusion Matrix</h2>
+    <img src="{{ cm_path }}" alt="Confusion Matrix">
+    <h2>Grafik Akurasi dan Loss</h2>
+    <img src="/static/training_plot.png" alt="Training Plot">
+</body>
+</html>

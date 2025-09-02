@@ -1,0 +1,82 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f7fa;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 80%;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2 {
+    text-align: center;
+    color: #333;
+}
+
+.upload-form, .predict-form {
+    text-align: center;
+    margin-top: 30px;
+}
+
+input[type="file"] {
+    margin: 10px auto;
+    display: block;
+}
+
+button, input[type="submit"] {
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 10px 5px;
+}
+
+button:hover, input[type="submit"]:hover {
+    background-color: #2980b9;
+}
+
+.image-preview {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.image-preview img {
+    width: 250px;
+    height: auto;
+    border: 3px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.result-box {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 20px;
+    color: #2c3e50;
+    font-weight: bold;
+}
+
+a.button-link {
+    display: inline-block;
+    text-decoration: none;
+    margin-top: 20px;
+    background-color: #2ecc71;
+    padding: 12px 24px;
+    border-radius: 6px;
+    color: white;
+}
+
+a.button-link:hover {
+    background-color: #27ae60;
+}

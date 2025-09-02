@@ -6,18 +6,26 @@ from tensorflow.keras.preprocessing.image import img_to_array
 from PIL import Image
 import cv2
 from sklearn.mixture import GaussianMixture
+from huggingface_hub import hf_hub_download
 
 # --- Konfigurasi dasar ---
 app = Flask(__name__)
-UPLOAD_FOLDER = 'static'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+UPLOAD_FOLDER = "static"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-# --- Load model binary classification ---
-model = load_model('model_gmm_hasil/resnet_model_gmm_opt_final.keras')
-class_labels = ['Caries', 'Non-Caries']
+# --- Hugging Face repo tempat model disimpan ---
+# ganti sesuai repo kamu di Hugging Face
+repo_id = "iibn13/flask"  
+filename = "resnet_model_gmm_opt_final.keras"  
+
+# --- Download model dari Hugging Face Hub ---
+model_path = hf_hub_download(repo_id=repo_id, filename=filename)
+model = load_model(model_path)
+
+class_labels = ["Caries", "Non-Caries"]
 img_size = 224
 
-# --- Fungsi Segmentasi GMM (sesuai code training) ---
+# --- Fungsi Segmentasi GMM ---
 def gmm_threshold(img_array):
     img_resized = cv2.resize(img_array, (img_size, img_size))
     gray = cv2.cvtColor(img_resized, cv2.COLOR_RGB2GRAY)
@@ -33,58 +41,52 @@ def gmm_threshold(img_array):
     binary_rgb = cv2.cvtColor(binary_img, cv2.COLOR_GRAY2RGB)
     return binary_rgb.astype("float32") / 255.0
 
-# --- Fungsi Preprocessing + Segmentasi ---
+# --- Preprocessing + Segmentasi ---
 def preprocess_and_segment(image_path):
-    # Simpan gambar asli
-    img_pil = Image.open(image_path).convert('RGB')
-    original_path = os.path.join(app.config['UPLOAD_FOLDER'], 'original.jpg')
+    img_pil = Image.open(image_path).convert("RGB")
+    original_path = os.path.join(app.config["UPLOAD_FOLDER"], "original.jpg")
     img_pil.save(original_path)
 
-    # Konversi ke numpy (RGB)
     img_np = np.array(img_pil)
-
-    # Segmentasi GMM
     segmented = gmm_threshold(img_np)
 
-    # Simpan hasil segmentasi
-    segmented_path = os.path.join(app.config['UPLOAD_FOLDER'], 'segmented.jpg')
-    seg_disp = (segmented * 255).astype(np.uint8)  # untuk simpan
+    segmented_path = os.path.join(app.config["UPLOAD_FOLDER"], "segmented.jpg")
+    seg_disp = (segmented * 255).astype(np.uint8)
     Image.fromarray(seg_disp).save(segmented_path)
 
-    # Bentuk array untuk model
-    img_array = np.expand_dims(segmented, axis=0)  # (1, 224, 224, 3)
+    img_array = np.expand_dims(segmented, axis=0)
     return img_array, original_path, segmented_path
 
-# --- Fungsi hanya load segmented image ---
+# --- Load segmented image ---
 def load_segmented_image():
-    segmented_path = os.path.join(app.config['UPLOAD_FOLDER'], 'segmented.jpg')
-    img = Image.open(segmented_path).convert('RGB')
+    segmented_path = os.path.join(app.config["UPLOAD_FOLDER"], "segmented.jpg")
+    img = Image.open(segmented_path).convert("RGB")
     img_array = img_to_array(img) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
     return img_array
 
 # --- Halaman utama ---
-@app.route('/')
+@app.route("/")
 def index():
-    return render_template('index.html')
+    return render_template("index.html")
 
 # --- Upload dan preview gambar ---
-@app.route('/preview', methods=['POST'])
+@app.route("/preview", methods=["POST"])
 def preview():
-    file = request.files['image']
-    if file and file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-        image_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    file = request.files["image"]
+    if file and file.filename.lower().endswith((".png", ".jpg", ".jpeg")):
+        image_path = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
         file.save(image_path)
 
         _, original, segmented = preprocess_and_segment(image_path)
 
-        return render_template('index.html',
-                               original_image=original,
-                               processed_image=segmented)
-    return 'File gambar tidak valid.'
+        return render_template(
+            "index.html", original_image=original, processed_image=segmented
+        )
+    return "File gambar tidak valid."
 
-# --- Prediksi gambar ---
-@app.route('/predict', methods=['POST'])
+# --- Prediksi ---
+@app.route("/predict", methods=["POST"])
 def predict():
     img_array = load_segmented_image()
     prediction = model.predict(img_array)[0][0]
@@ -92,20 +94,25 @@ def predict():
     class_name = class_labels[class_idx]
     confidence = prediction if class_idx == 1 else 1 - prediction
 
-    return render_template('index.html',
-                           prediction_result=True,
-                           class_name=class_name,
-                           confidence=round(confidence * 100, 2),
-                           original_image='static/original.jpg',
-                           processed_image='static/segmented.jpg')
+    return render_template(
+        "index.html",
+        prediction_result=True,
+        class_name=class_name,
+        confidence=round(confidence * 100, 2),
+        original_image="static/original.jpg",
+        processed_image="static/segmented.jpg",
+    )
 
-# --- Halaman evaluasi model ---
-@app.route('/evaluation')
+# --- Halaman evaluasi ---
+@app.route("/evaluation")
 def evaluation():
-    return render_template('evaluation.html',
-                           cm_path='static/grafik/cm.png',
-                           training_plot_path='static/training_plot.png')
+    return render_template(
+        "evaluation.html",
+        cm_path="static/grafik/cm.png",
+        training_plot_path="static/training_plot.png",
+    )
 
-# --- Jalankan Flask App ---
-if __name__ == '__main__':
-    app.run(debug=True)
+# --- Jalankan App ---
+if __name__ == "__main__":
+    # host=0.0.0.0 penting agar jalan di Hugging Face Spaces
+    app.run(host="0.0.0.0", port=7860, debug=False)

@@ -1,8 +1,0 @@
-flask
-tensorflow
-numpy
-pillow
-opencv-python-headless
-scikit-learn
-huggingface_hub
-gunicorn
